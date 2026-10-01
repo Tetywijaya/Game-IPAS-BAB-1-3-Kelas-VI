@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan IPAS Kelas 6 SD - Kurikulum Merdeka</title>
+    <!-- Tailwind CSS untuk Styling Responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%);
+            min-height: 100vh;
+        }
+        .font-game {
+            font-family: 'Fredoka', cursive;
+        }
+        .card-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-bounce {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-bounce:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+        .btn-bounce:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-3 sm:p-6 text-gray-800">
+
+    <!-- Sound Toggle Button -->
+    <div class="fixed top-4 right-4 z-50 flex gap-2">
+        <button id="bgm-toggle" onclick="toggleBGM()" class="bg-white/90 hover:bg-white p-3 rounded-full shadow-lg text-xl border-2 border-amber-400 btn-bounce" title="Musik Latar">
+            🎵
+        </button>
+        <button id="sfx-toggle" onclick="toggleSFX()" class="bg-white/90 hover:bg-white p-3 rounded-full shadow-lg text-xl border-2 border-emerald-400 btn-bounce" title="Efek Suara">
+            🔊
+        </button>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="w-full max-w-2xl card-glass rounded-3xl p-5 sm:p-8 shadow-2xl border-4 border-white/50 my-auto">
+
+        <!-- 1. START / REGISTRATION SCREEN -->
+        <div id="start-screen" class="text-center space-y-6">
+            <div class="inline-block bg-amber-100 text-amber-800 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full border border-amber-300 shadow-sm animate-pulse-slow">
+                ✨ Kurikulum Merdeka - Semester 1
+            </div>
+            
+            <div class="space-y-2">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-600 font-game tracking-wide">
+                    🧬 PETUALANGAN IPAS 🔬
+                </h1>
+                <p class="text-gray-600 text-sm sm:text-base font-semibold">
+                    Uji Pemahaman Tubuh Manusia & Organ Penting (40 Soal)
+                </p>
+            </div>
+
+            <!-- Input Google Sheets Script URL config -->
+            <div class="bg-blue-50/80 p-4 rounded-2xl border border-blue-200 text-left space-y-2">
+                <label class="block text-xs font-bold text-blue-900 uppercase tracking-wider">🔗 Google Apps Script URL (Guru / Backup Data):</label>
+                <input type="text" id="script-url-input" class="w-full p-2.5 text-xs sm:text-sm border border-blue-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="https://script.google.com/macros/s/.../exec">
+                <p class="text-[11px] text-gray-500">*Opsional: Masukkan URL Apps Script untuk rekap nilai otomatis ke Google Sheets.</p>
+            </div>
+
+            <!-- Identitas Siswa -->
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">👤 Nama Lengkap Siswa:</label>
+                    <input type="text" id="student-name" class="w-full p-3 sm:p-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 font-bold text-gray-800 shadow-inner" placeholder="Contoh: Budi Pratama">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🔢 Nomor Absen:</label>
+                    <input type="number" id="student-absent" class="w-full p-3 sm:p-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 font-bold text-gray-800 shadow-inner" placeholder="Contoh: 12">
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-game text-xl rounded-2xl shadow-lg border-b-4 border-emerald-700 btn-bounce">
+                🚀 MULAI PETUALANGAN! 🚀
+            </button>
+        </div>
+
+        <!-- 2. GAME QUIZ SCREEN -->
+        <div id="game-screen" class="hidden space-y-5">
+            <!-- Header Info Game -->
+            <div class="flex flex-wrap justify-between items-center bg-slate-100 p-3 sm:p-4 rounded-2xl gap-2 border border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs sm:text-sm font-bold text-gray-500">Soal:</span>
+                    <span id="current-q-num" class="font-game text-lg sm:text-xl text-blue-600 font-bold">1</span>
+                    <span class="text-xs sm:text-sm text-gray-400">/ 40</span>
+                </div>
+                <div id="category-badge" class="bg-blue-600 text-white font-bold text-xs sm:text-sm px-3 py-1 rounded-full shadow-sm">
+                    Kategori
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs sm:text-sm font-bold text-gray-500">Skor:</span>
+                    <span id="score-display" class="font-game text-xl sm:text-2xl text-emerald-600 font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Visual Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-3.5 overflow-hidden p-0.5 border border-gray-300">
+                <div id="progress-bar" class="bg-gradient-to-r from-amber-400 via-emerald-400 to-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border-2 border-slate-200 shadow-md min-h-[120px] flex items-center">
+                <h2 id="question-text" class="text-base sm:text-lg font-bold text-gray-800 leading-relaxed">
+                    Pertanyaan akan muncul di sini...
+                </h2>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="grid grid-cols-1 gap-3">
+                <!-- Pilihan Jawaban akan digenerate lewat JS -->
+            </div>
+        </div>
+
+        <!-- 3. END / RESULTS SCREEN -->
+        <div id="end-screen" class="hidden text-center space-y-6">
+            <div class="space-y-2">
+                <div class="text-5xl sm:text-6xl animate-bounce">🏆</div>
+                <h2 class="text-3xl font-extrabold text-gray-800 font-game">PETUALANGAN SELESAI!</h2>
+                <p class="text-gray-600 font-semibold">Hasil evaluasi pembelajaran kamu:</p>
+            </div>
+
+            <!-- Score Display Box -->
+            <div class="bg-gradient-to-br from-amber-100 to-amber-200 p-6 rounded-3xl border-4 border-amber-300 shadow-inner space-y-2">
+                <p class="text-sm font-bold text-amber-800 uppercase tracking-widest">NILAI AKHIR</p>
+                <div id="final-score" class="text-6xl sm:text-7xl font-extrabold text-amber-600 font-game">0</div>
+                <p id="motivational-msg" class="text-sm sm:text-base font-bold text-amber-900 pt-2">
+                    Luar biasa! Teruslah tingkatkan semangat belajarmu!
+                </p>
+            </div>
+
+            <!-- Student Summary Info -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-1 text-xs sm:text-sm">
+                <div><span class="font-bold text-gray-600">Siswa:</span> <span id="summary-name" class="font-bold text-blue-700">-</span></div>
+                <div><span class="font-bold text-gray-600">No. Absen:</span> <span id="summary-absent" class="font-bold text-blue-700">-</span></div>
+                <div><span class="font-bold text-gray-600">Status Backup Sheets:</span> <span id="sync-status" class="font-bold text-amber-600">Menyiapkan...</span></div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-game text-xl rounded-2xl shadow-lg border-b-4 border-blue-800 btn-bounce">
+                🔄 MAIN LAGI
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* WEB AUDIO API SYNTHESIZER */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let bgmInterval = null;
+        let isBgmOn = true;
+        let isSfxOn = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Sound Effects (SFX)
+        function playSFX(type) {
+            if (!isSfxOn) return;
+            initAudio();
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(160, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+        }
+
+        // Synthesizer Chiptune Background Music (BGM)
+        const bgmNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
+        let bgmNoteIndex = 0;
+
+        function startBGM() {
+            if (bgmInterval || !isBgmOn) return;
+            bgmInterval = setInterval(() => {
+                if (!isBgmOn) return;
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(bgmNotes[bgmNoteIndex], now);
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+
+                bgmNoteIndex = (bgmNoteIndex + 1) % bgmNotes.length;
+            }, 300);
+        }
+
+        function stopBGM() {
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        function toggleBGM() {
+            playSFX('click');
+            isBgmOn = !isBgmOn;
+            const btn = document.getElementById('bgm-toggle');
+            if (isBgmOn) {
+                btn.innerText = '🎵';
+                startBGM();
+            } else {
+                btn.innerText = '🔇';
+                stopBGM();
+            }
+        }
+
+        function toggleSFX() {
+            isSfxOn = !isSfxOn;
+            const btn = document.getElementById('sfx-toggle');
+            btn.innerText = isSfxOn ? '🔊' : '🔇';
+            if (isSfxOn) playSFX('click');
+        }
+
+        /* BANK 40 SOAL LENGKAP SESUAI 5 INFOGRAFIS */
+        const questions = [
+            // --- 1. SISTEM PEREDARAN DARAH (10 SOAL) ---
+            { bab: "Peredaran Darah", q: "Bagian darah yang bertugas membunuh kuman penyakit dan melawan infeksi adalah...", options: ["Eritrosit (Sel Darah Merah)", "Leukosit (Sel Darah Putih)", "Trombosit (Keping Darah)", "Plasma Darah"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Komponen darah yang berfungsi membawa oksigen ke seluruh tubuh adalah...", options: ["Sel Darah Putih", "Sel Darah Merah", "Trombosit", "Keping Darah"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Fungsi utama Trombosit (keping darah) dalam tubuh manusia adalah...", options: ["Mengangkut nutrisi", "Membantu pembekuan darah saat luka", "Menjaga suhu tubuh", "Memompa darah"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Pembuluh darah yang mengalirkan darah keluar dari jantung dinamakan...", options: ["Vena", "Arteri (Nadi)", "Kapiler", "Alveolus"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Pembuluh darah terkecil tempat terjadinya pertukaran gas dinamakan...", options: ["Vena Pulmonalis", "Aorta", "Pembuluh Kapiler", "Arteri Pulmonalis"], ans: 2 },
+            { bab: "Peredaran Darah", q: "Urutan peredaran darah KECIL (Pulmonalis) yang benar adalah...", options: ["Jantung (Ventrikel Kiri) -> Seluruh Tubuh -> Jantung", "Jantung (Ventrikel Kanan) -> Paru-paru -> Jantung (Atrium Kiri)", "Paru-paru -> Seluruh Tubuh -> Jantung", "Jantung -> Hati -> Paru-paru"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Peredaran darah BESAR (Sistemik) mengalirkan darah dari jantung ke...", options: ["Paru-paru saja", "Seluruh Tubuh", "Otak saja", "Ginjal saja"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Ruang jantung yang berfungsi memompa darah bersih kaya oksigen ke seluruh tubuh adalah...", options: ["Atrium Kanan", "Atrium Kiri", "Ventrikel Kanan", "Ventrikel Kiri"], ans: 3 },
+            { bab: "Peredaran Darah", q: "Pembuluh Vena Pulmonalis membawa darah yang kaya akan...", options: ["Karbondioksida", "Oksigen", "Racun", "Uap Air"], ans: 1 },
+            { bab: "Peredaran Darah", q: "Berikut ini cara menjaga kesehatan organ peredaran darah, KECUALI...", options: ["Makan makanan bergizi", "Istirahat cukup", "Merokok teratur", "Tidak merokok"], ans: 2 },
+
+            // --- 2. SISTEM GERAK: RANGKA, OTOT & SARAF (8 SOAL) ---
+            { bab: "Sistem Gerak", q: "Rangka tubuh manusia berfungsi sebagai alat gerak...", options: ["Aktif", "Pasif", "Otomatis", "Sentral"], ans: 1 },
+            { bab: "Sistem Gerak", q: "Sistem otot dalam tubuh manusia berperan sebagai alat gerak...", options: ["Pasif", "Aktif", "Tambahan", "Saraf"], ans: 1 },
+            { bab: "Sistem Gerak", q: "Jenis otot yang bekerja secara sadar, bergaris-garis, dan melekat pada rangka adalah...", options: ["Otot Polos", "Otot Lurik", "Otot Jantung", "Otot Otak"], ans: 1 },
+            { bab: "Sistem Gerak", q: "Otot yang terdapat pada organ lambung dan usus yang bekerja secara tidak sadar adalah...", options: ["Otot Polos", "Otot Lurik", "Otot Bisep", "Otot Trisep"], ans: 0 },
+            { bab: "Sistem Gerak", q: "Sendi yang memungkinkan gerakan ke segala arah (contoh: bahu dan panggul) dinamakan...", options: ["Sendi Engsel", "Sendi Peluru", "Sendi Putar", "Sendi Pelana"], ans: 1 },
+            { bab: "Sistem Gerak", q: "Sendi pada siku dan lutut yang hanya memungkinkan gerakan satu arah disebut...", options: ["Sendi Engsel", "Sendi Peluru", "Sendi Geser", "Sendi Putar"], ans: 0 },
+            { bab: "Sistem Gerak", q: "Pusat pengendali seluruh kegiatan tubuh, pikiran, dan memori adalah...", options: ["Sumsum Tulang Belakang", "Otak Besar", "Otak Kecil", "Sel Saraf Motorik"], ans: 1 },
+            { bab: "Sistem Gerak", q: "Mekanisme kerja otot lengan saat mengangkat beban adalah...", options: ["Bisep relaksasi, trisep kontraksi", "Bisep berkontraksi (memendek) dan trisep berelaksasi (memanjang)", "Kedua otot mati", "Kedua otot memanjang"], ans: 1 },
+
+            // --- 3. MASA PUBERTAS (8 SOAL) ---
+            { bab: "Masa Pubertas", q: "Masa transisi dari anak-anak menuju dewasa yang ditandai perubahan fisik dan hormonal disebut...", options: ["Masa Balita", "Masa Pubertas", "Masa Lansia", "Masa Dewasa Akhir"], ans: 1 },
+            { bab: "Masa Pubertas", q: "Salah satu ciri fisik pubertas yang KHAS terjadi pada LAKI-LAKI adalah...", options: ["Pinggul melebar", "Mimpi basah & tumbuh jakun", "Menstruasi", "Payudara membesar"], ans: 1 },
+            { bab: "Masa Pubertas", q: "Tanda utama kematangan organ reproduksi pada perempuan adalah mengalami...", options: ["Mimpi Basah", "Menstruasi (Haid)", "Suara membesar", "Tumbuh jakun"], ans: 1 },
+            { bab: "Masa Pubertas", q: "Perubahan fisik yang dialami BAIK oleh laki-laki MAUPUN perempuan saat pubertas adalah...", options: ["Tumbuh rambut ketiak & kulit berjerawat", "Mimpi basah", "Suara menjadi berat", "Pinggul membesar"], ans: 0 },
+            { bab: "Masa Pubertas", q: "Perubahan emosi yang wajar terjadi pada remaja saat pubertas adalah...", options: ["Suasana hati (mood) mudah berubah-ubah", "Daya ingat hilang total", "Selalu gembira tanpa alasan", "Sifat menjadi bayi lagi"], ans: 0 },
+            { bab: "Masa Pubertas", q: "Cara menjaga kebersihan diri yang tepat saat memasuki masa pubertas adalah...", options: ["Mandi 1 kali seminggu", "Cuci muka dan mandi teratur 2x sehari", "Jarang mengganti pakaian dalam", "Membiarkan wajah berminyak"], ans: 1 },
+            { bab: "Masa Pubertas", q: "Apabila bingung menghadapi perubahan fisik/emosi saat pubertas, tempat bertanya terbaik adalah...", options: ["Orang asing di internet", "Orang tua (Ayah/Ibu) atau Guru", "Teman bermain yang lebih muda", "Media sosial acak"], ans: 1 },
+            { bab: "Masa Pubertas", q: "Mengapa penting menjaga kebersihan organ reproduksi pada masa pubertas?", options: ["Agar terlihat keren", "Mencegah timbulnya bakteri dan penyakit", "Agar tidak tumbuh tinggi", "Agar kulit menjadi gelap"], ans: 1 },
+
+            // --- 4. SISTEM PENCERNAAN (7 SOAL) ---
+            { bab: "Sistem Pencernaan", q: "Urutan alur pencernaan makanan manusia yang benar adalah...", options: ["Mulut -> Lambung -> Kerongkongan -> Usus Halus -> Usus Besar", "Mulut -> Kerongkongan -> Lambung -> Usus Halus -> Usus Besar -> Anus", "Mulut -> Usus Besar -> Lambung -> Kerongkongan", "Mulut -> Paru-paru -> Lambung -> Anus"], ans: 1 },
+            { bab: "Sistem Pencernaan", q: "Gerakan meremas dan mendorong makanan pada kerongkongan menuju lambung disebut...", options: ["Gerak Parabola", "Gerak Peristaltik", "Gerak Kimiawi", "Gerak Otomatis"], ans: 1 },
+            { bab: "Sistem Pencernaan", q: "Pencernaan mekanis di mulut dilakukan dengan bantuan...", options: ["Enzim Ptialin", "Gigi dan Lidah", "Asam Klorida", "Empedu"], ans: 1 },
+            { bab: "Sistem Pencernaan", q: "Organ pencernaan yang berfungsi utama menyerap SARI-SARI MAKANAN adalah...", options: ["Usus Besar", "Lambung", "Usus Halus (Vili)", "Kerongkongan"], ans: 2 },
+            { bab: "Sistem Pencernaan", q: "Fungsi utama dari USUS BESAR dalam proses pencernaan adalah...", options: ["Mencerna lemak", "Menyerap air & garam mineral serta pembusukan sisa makanan", "Menghasilkan enzim amilase", "Memotong makanan"], ans: 1 },
+            { bab: "Sistem Pencernaan", q: "Cairan Empedu yang berfungsi mencerna lemak dihasilkan oleh organ...", options: ["Pankreas", "Hati", "Lambung", "Mulut"], ans: 1 },
+            { bab: "Sistem Pencernaan", q: "Asam lambung (HCl) di dalam organ lambung bermanfaat untuk...", options: ["Menyerap air", "Membunuh kuman penyakit yang masuk bersama makanan", "Mencerna karbohidrat", "Mengunyah makanan"], ans: 1 },
+
+            // --- 5. SISTEM PERNAPASAN (7 SOAL) ---
+            { bab: "Sistem Pernapasan", q: "Tempat terjadinya pertukaran gas Oksigen (O2) dan Karbondioksida (CO2) di paru-paru adalah...", options: ["Bronkus", "Trakea", "Alveolus", "Faring"], ans: 2 },
+            { bab: "Sistem Pernapasan", q: "Proses menghirup udara bersih kaya oksigen ke dalam paru-paru dinamakan...", options: ["Ekshalasi", "Inhalasi (Inspirasi)", "Ekskresi", "Digesti"], ans: 1 },
+            { bab: "Sistem Pernapasan", q: "Saat kita melakukan INHALASI (menghirup udara), kondisi otot diafragma adalah...", options: ["Berkontraksi dan mendatar", "Berelaksasi dan melengkung", "Mengecil total", "Tidakk bergerak"], ans: 0 },
+            { bab: "Sistem Pernapasan", q: "Pada proses EKSHALASI (menghembuskan udara), rongga dada akan...", options: ["Membesar", "Mengecil", "Tetap sama", "Meletup"], ans: 1 },
+            { bab: "Sistem Pernapasan", q: "Organ pernapasan yang berfungsi menyesuaikan suhu dan menyaring kotoran udara pertama kali adalah...", options: ["Rongga Hidung", "Trakea", "Alveolus", "Laring"], ans: 0 },
+            { bab: "Sistem Pernapasan", q: "Batang tenggorokan yang menghubungkan rongga hidung dengan paru-paru disebut...", options: ["Trakea", "Esofagus", "Aorta", "Vena"], ans: 0 },
+            { bab: "Sistem Pernapasan", q: "Tindakan berikut yang dapat merusak kesehatan organ paru-paru adalah...", options: ["Rajin berolahraga", "Menghirup asap rokok dan polusi", "Makan sayuran", "Menjaga kebersihan lingkungan"], ans: 1 }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let studentName = "";
+        let studentAbsent = "";
+
+        function startGame() {
+            initAudio();
+            studentName = document.getElementById('student-name').value.trim();
+            studentAbsent = document.getElementById('student-absent').value.trim();
+
+            if (!studentName || !studentAbsent) {
+                alert("⚠️ Harap isi Nama Lengkap dan Nomor Absen kamu terlebih dahulu!");
+                return;
+            }
+
+            playSFX('click');
+            startBGM();
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            currentQIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const qData = questions[currentQIndex];
+            document.getElementById('current-q-num').innerText = currentQIndex + 1;
+            document.getElementById('category-badge').innerText = qData.bab;
+            document.getElementById('question-text').innerText = qData.q;
+            document.getElementById('score-display').innerText = score;
+
+            // Progress bar
+            const progress = ((currentQIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            // Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 font-bold text-gray-700 transition-all shadow-sm btn-bounce text-sm sm:text-base flex items-center gap-3";
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-blue-600 font-extrabold text-xs sm:text-sm border border-slate-200">${String.fromCharCode(65 + idx)}</span>
+                    <span class="flex-1">${opt}</span>
+                `;
+                btn.onclick = () => selectOption(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIdx, btnElement) {
+            const qData = questions[currentQIndex];
+            const allButtons = document.getElementById('options-container').children;
+
+            // Disable all buttons during evaluation
+            for (let btn of allButtons) {
+                btn.style.pointerEvents = 'none';
+            }
+
+            if (selectedIdx === qData.ans) {
+                btnElement.classList.remove('bg-white', 'border-slate-200');
+                btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                playSFX('correct');
+                score += 2.5; // Total 40 soal * 2.5 = 100 max score
+                document.getElementById('score-display').innerText = score;
+            } else {
+                btnElement.classList.remove('bg-white', 'border-slate-200');
+                btnElement.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800');
+                
+                // Highlight correct answer
+                const correctBtn = allButtons[qData.ans];
+                correctBtn.classList.remove('bg-white', 'border-slate-200');
+                correctBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                playSFX('wrong');
+            }
+
+            setTimeout(() => {
+                currentQIndex++;
+                if (currentQIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    endGame();
+                }
+            }, 1200);
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('summary-name').innerText = studentName;
+            document.getElementById('summary-absent').innerText = studentAbsent;
+
+            // Motivational message based on score
+            const msgEl = document.getElementById('motivational-msg');
+            if (score >= 85) {
+                msgEl.innerText = "🌟 HEBAT SEKALI! Kamu Master IPAS Sejati!";
+            } else if (score >= 70) {
+                msgEl.innerText = "👍 BAGUS! Pemahaman IPAS kamu sudah baik!";
+            } else {
+                msgEl.innerText = "💪 TETAP SEMANGAT! Ayo pelajari lagi infografisnya!";
+            }
+
+            // Sync to Google Sheets if Script URL provided
+            const scriptUrl = document.getElementById('script-url-input').value.trim();
+            const syncStatusEl = document.getElementById('sync-status');
+
+            if (scriptUrl) {
+                syncStatusEl.innerText = "⏳ Mengirim data ke Google Sheets...";
+                syncStatusEl.className = "font-bold text-amber-600";
+
+                const formData = new FormData();
+                formData.append("Nama", studentName);
+                formData.append("Absen", studentAbsent);
+                formData.append("Nilai", score);
+
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    syncStatusEl.innerText = "✅ Berhasil Disimpan ke Google Sheets Guru!";
+                    syncStatusEl.className = "font-bold text-emerald-600";
+                })
+                .catch(err => {
+                    syncStatusEl.innerText = "⚠️ Gagal koneksi Apps Script. Cek URL Anda.";
+                    syncStatusEl.className = "font-bold text-rose-600";
+                });
+            } else {
+                syncStatusEl.innerText = "ℹ️ Tidak dihubungkan ke Sheets (URL Kosong)";
+                syncStatusEl.className = "font-bold text-gray-500";
+            }
+        }
+    </script>
+</body>
+</html>
